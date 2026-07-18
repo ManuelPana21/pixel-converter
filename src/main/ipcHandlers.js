@@ -1,10 +1,13 @@
-const { ipcMain, dialog } = require('electron');
+const { ipcMain, dialog, app } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 function iniciarHandlers() {
     
+    // Manejador para abrir el dialogo de seleccion de archivos
+    // Filtra para permitir unicamente formatos de imagen compatibles
+    // Si el usuario confirma envia la ruta del archivo a la interfaz visual
     ipcMain.on('abrir-archivo', async (event) => {
         const resultado = await dialog.showOpenDialog({
             properties: ['openFile'],
@@ -16,17 +19,31 @@ function iniciarHandlers() {
         }
     });
 
+    // Manejador para procesar la imagen en el motor secundario
+    // Extrae los datos necesarios que envia el usuario
     ipcMain.on('procesar-imagen', (event, datos) => {
-        // Extraemos ancho y alto separados
         const { ruta, ancho, alto, mantenerOriginal } = datos;
         
-        const scriptPath = path.join(__dirname, '../python/engine.py');
+        let comando;
         
-        // Concatenamos ambas variables en el orden correcto para Python
-        const comando = `python "${scriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal}`;
+        // Verifica si la aplicacion ya esta compilada para produccion
+        // Construye la ruta hacia el ejecutable empaquetado en resources
+        // Define el comando ejecutando directamente el binario
+        if (app.isPackaged) {
+            const enginePath = path.join(process.resourcesPath, 'engine.exe');
+            comando = `"${enginePath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal}`;
+        } 
+        // Ejecuta la version de desarrollo si no esta empaquetada
+        // Construye la ruta hacia el script original de Python
+        // Define el comando llamando al interprete local de Python
+        else {
+            const scriptPath = path.join(__dirname, '../python/engine.py');
+            comando = `python "${scriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal}`;
+        }
 
+        // Llama a la consola del sistema para iniciar el procesamiento
+        // Gestiona posibles errores de ejecucion y respuestas exitosas
         exec(comando, (error, stdout, stderr) => {
-            // Logica intacta del manejo de errores
             if (error) {
                 console.error("Error en Python:", error);
                 return;
@@ -42,12 +59,13 @@ function iniciarHandlers() {
         });
     });
 
+    // Manejador para guardar la imagen ya convertida en el sistema
+    // Construye un nuevo nombre sugerido tomando el nombre base
+    // Abre la ventana de guardado y copia el archivo temporal a su destino
     ipcMain.on('guardar-archivo', async (event, rutas) => {
         
         const { temp, original } = rutas;
-        
         const datosOriginales = path.parse(original);
-        
         const nuevoNombre = `${datosOriginales.name}-pixeled.png`;
 
         const resultado = await dialog.showSaveDialog({
@@ -62,7 +80,8 @@ function iniciarHandlers() {
         }
     });
 
-    // Nuevo manejador para borrar el rastro del archivo temporal
+    // Manejador para eliminar el archivo temporal de la imagen
+    // Valida que el archivo exista en la ruta antes de intentar borrarlo
     ipcMain.on('limpiar-temp', (event, rutaTemp) => {
         if (rutaTemp && fs.existsSync(rutaTemp)) {
             fs.unlinkSync(rutaTemp);
