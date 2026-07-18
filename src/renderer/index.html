@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    
+    <!-- Evitamos advertencias de seguridad al trabajar con archivos locales -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+    
+    <title>Pixel Converter</title>
+    
+    <!-- Enlace a los estilos visuales que haremos luego -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Contenedor inicial para recibir la imagen del usuario -->
+    <div id="pantalla-inicio" class="vista-activa">
+        <h1>Pixel Converter</h1>
+        <div id="zona-arrastre">
+            <p>Arrastra tu imagen aquí</p>
+            <p>o</p>
+            <button id="btn-seleccionar">Seleccionar Archivo</button>
+        </div>
+    </div>
+
+    <!-- Contenedor temporal para mostrar al usuario que Python esta trabajando -->
+    <div id="pantalla-carga" class="oculto">
+        <p>Procesando imagen...</p>
+    </div>
+
+    <!-- Contenedor principal de comparacion y ajustes -->
+    <div id="pantalla-edicion" class="oculto">
+        
+        <div class="contenedor-imagenes">
+            
+            <!-- Lienzo para la imagen sin alterar -->
+            <div class="caja-imagen">
+                <img id="img-original" src="" alt="Original">
+            </div>
+            
+            <div class="flecha">➡</div>
+            
+            <!-- Lienzo para el resultado de nuestro motor Python -->
+            <div class="caja-imagen">
+                <img id="img-pixelada" src="" alt="Pixelada">
+            </div>
+            
+        </div>
+
+        <div class="controles-resolucion">
+            <p>Resolución de salida:</p>
+            
+            <button class="btn-res" data-size="16">16x16</button>
+            <button class="btn-res" data-size="32">32x32</button>
+            <button class="btn-res" data-size="64">64x64</button>
+            <button class="btn-res" data-size="128">128x128</button>
+            <button class="btn-res" data-size="256">256x256</button>
+            <button class="btn-res" data-size="512">512x512</button>
+            
+            <div class="controles-manuales">
+                <label>Ancho: <input type="number" id="input-w" value="64"></label>
+                <label>Alto: <input type="number" id="input-h" value="64"></label>
+                <button id="btn-aplicar">Aplicar Manual</button>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label>
+                    <input type="checkbox" id="check-mantener-res"> 
+                    Conservar resolución original
+                </label>
+            </div>
+        </div>
+        
+        <div class="botones-accion" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button id="btn-volver">Cargar nueva imagen</button>
+            <button id="btn-guardar" class="btn-activo">Guardar Imagen</button>
+        </div>        
+    </div>
+
+    <!-- Conexion con la logica del lado del cliente -->
+    <script src="app.js"></script>
+</body>
+</html>

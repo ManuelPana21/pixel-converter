@@ -1,0 +1,139 @@
+/* Variables de colores base para un entorno de trabajo relajante */
+:root {
+  --fondo-oscuro: #2e3440;
+  --fondo-tarjeta: #3b4252;
+  --texto-claro: #eceff4;
+  --color-acento: #88c0d0;
+  --acento-brillo: #81a1c1;
+  --lineas-borde: #4c566a;
+}
+
+/* Limpieza de margenes y tipografia del sistema */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--fondo-oscuro);
+  color: var(--texto-claro);
+}
+
+/* Contenedor central flexible */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Clase clave para nuestra logica de cambio de pantallas */
+.oculto {
+  display: none !important;
+}
+
+/* Contenedores principales con bordes redondeados suaves */
+#pantalla-inicio, #pantalla-edicion {
+  background-color: var(--fondo-tarjeta);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Estilo del area para soltar los sprites */
+#zona-arrastre {
+  border: 3px dashed var(--lineas-borde);
+  border-radius: 12px;
+  padding: 60px 20px;
+  margin-top: 20px;
+  transition: border-color 0.3s ease;
+}
+
+#zona-arrastre:hover {
+  border-color: var(--color-acento);
+}
+
+/* Botones con estilo moderno y colores pastel */
+button {
+  background-color: var(--color-acento);
+  color: var(--fondo-oscuro);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  margin: 5px;
+}
+
+button:hover {
+  background-color: var(--acento-brillo);
+}
+
+/* Entradas manuales de resolucion */
+input[type="number"] {
+  background-color: var(--fondo-oscuro);
+  color: var(--texto-claro);
+  border: 1px solid var(--lineas-borde);
+  padding: 8px;
+  border-radius: 6px;
+  width: 70px;
+  margin: 0 10px;
+  text-align: center;
+}
+
+/* Distribucion horizontal para comparar el antes y despues */
+.contenedor-imagenes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin: 30px 0;
+}
+
+/* Marcos para mantener el arte ordenado */
+.caja-imagen {
+  background-color: var(--fondo-oscuro);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--lineas-borde);
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Renderizado estricto para evitar sprites borrosos */
+.caja-imagen img {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+}
+
+/* Estilo de la flecha central */
+.flecha {
+  font-size: 2.5rem;
+  color: var(--color-acento);
+}
+
+/* Separacion para la zona de controles */
+.controles-resolucion {
+  margin-bottom: 30px;
+}
+
+.controles-manuales {
+  margin-top: 20px;
+}
+
+.btn-activo {
+  background-color: var(--texto-claro);
+  color: var(--fondo-oscuro);
+  box-shadow: 0 0 10px var(--color-acento);
+  transform: scale(1.05);
+}

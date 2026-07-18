@@ -1,0 +1,12 @@
+# Ignorar dependencias de Node.js
+node_modules/
+
+# Ignorar entorno virtual de Python y archivos temporales
+venv/
+__pycache__/
+*.pyc
+
+# Ignorar las carpetas de compilacion donde se guardan los .exe
+dist/
+build/
+motor_compilado/
