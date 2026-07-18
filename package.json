@@ -1,16 +1,38 @@
 {
   "name": "pixel-converter",
   "version": "1.0.0",
-  "description": "",
+  "description": "Software de escritorio para conversion a pixel art",
+  "author": "manup",
   "main": "src/main/main.js",
-    "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "build": {
+    "appId": "com.manup.pixelconverter",
+    "productName": "Pixel Converter",
+    "extraFiles": [
+      {
+        "from": "motor_compilado",
+        "to": "resources",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "pig-icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "pig-icon.png"
+    }
+  },
+  "dependencies": {},
   "devDependencies": {
-    "electron": "^43.1.1"
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
   }
 }

@@ -1,10 +1,24 @@
-// Importamos solo el modulo de aplicacion de electron
-const { app } = require('electron');
-
-// Importamos nuestros propios modulos de ventana y comunicacion
-const { crearVentana } = require('./window');
+const path = require('path');
+const { app, BrowserWindow } = require('electron');
 const { iniciarHandlers } = require('./ipcHandlers');
 
+function createWindow() {
+    
+    const mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        icon: path.join(__dirname, '../../pig-icon.png'),
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    mainWindow.loadFile('src/renderer/index.html');
+    iniciarHandlers();
+}
+
+app.whenReady().then(createWindow);
 // Esperamos a que electron este listo para iniciar los procesos
 app.whenReady().then(() => {
     crearVentana();
