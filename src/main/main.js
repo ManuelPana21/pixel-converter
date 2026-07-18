@@ -13,6 +13,8 @@ function createWindow() {
         }
     });
 
+    mainWindow.setMenu(null);
+
     mainWindow.loadFile('src/renderer/index.html');
     iniciarHandlers();
 }
