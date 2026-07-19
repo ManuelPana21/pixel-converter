@@ -2,7 +2,7 @@
   "name": "pixel-converter",
   "version": "1.0.0",
   "description": "Conversor de pixeles",
-  "main": "main.js",
+  "main": "src/main.js",
   "author": "Manuel",
   "scripts": {
     "start": "electron .",
