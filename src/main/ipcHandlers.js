@@ -16,24 +16,53 @@ function iniciarHandlers() {
         }
     });
 
-    // Procesar imagen llamando al motor compilado o al script de Python
+    // Procesar imagen llamando al motor compilado o al script de Python con fallbacks en Linux
     ipcMain.on('procesar-imagen', async (event, datos) => {
         const { ruta, ancho, alto, mantenerOriginal, colores } = datos;
-        let comando = '';
+        
+        // Helper para ejecutar un comando y devolver una promesa
+        const runCommand = (cmd) => {
+            return new Promise((resolve, reject) => {
+                exec(cmd, (error, stdout, stderr) => {
+                    if (error) {
+                        reject({ error, stderr, stdout });
+                        return;
+                    }
+                    try {
+                        const respuesta = JSON.parse(stdout);
+                        if (respuesta.status === "ok") {
+                            resolve(respuesta);
+                        } else {
+                            reject({ error: new Error(respuesta.message || "Status no ok"), stderr, stdout });
+                        }
+                    } catch (e) {
+                        reject({ error: e, stderr, stdout });
+                    }
+                });
+            });
+        };
 
+        const esWindows = process.platform === 'win32';
+        
         if (app.isPackaged) {
-            const esWindows = process.platform === 'win32';
             const nombreMotor = esWindows ? 'engine.exe' : 'engine';
             let enginePath = path.join(process.resourcesPath, nombreMotor);
 
-            if (!esWindows) {
-                // En Linux/Unix empaquetados en AppImage, process.resourcesPath es de solo lectura.
-                // Intentar hacer fs.chmodSync directamente en la ruta de recursos provocará un error EROFS.
-                // Copiaremos el motor a una carpeta escribible (userData) para asignarle permisos de ejecución.
+            if (esWindows) {
+                // En Windows, ejecutar el binario .exe directamente
+                const comando = `"${enginePath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
+                runCommand(comando)
+                    .then(res => event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] }))
+                    .catch(err => console.error("Error ejecutando engine.exe en Windows:", err));
+            } else {
+                // En Linux/Unix (AppImage)
                 const destPath = path.join(app.getPath('userData'), nombreMotor);
+                let binarioListo = false;
+
                 try {
                     let copyNeeded = true;
-                    if (fs.existsSync(destPath)) {
+                    // Verificamos si ya existe el binario copiado y si coincide en tamaño
+                    if (fs.existsSync(destPath) && fs.existsSync(enginePath)) {
                         const srcStats = fs.statSync(enginePath);
                         const destStats = fs.statSync(destPath);
                         if (srcStats.size === destStats.size) {
@@ -41,52 +70,86 @@ function iniciarHandlers() {
                         }
                     }
 
-                    if (copyNeeded) {
+                    // Copiamos el binario a userData si es necesario
+                    if (copyNeeded && fs.existsSync(enginePath)) {
                         fs.copyFileSync(enginePath, destPath);
                     }
 
-                    fs.chmodSync(destPath, '755');
-                    enginePath = destPath; // Usar el binario copiado y con permisos correctos
-                } catch (error) {
-                    console.error('Error al preparar el motor ejecutable en Linux:', error);
-                    // Si falla, intentamos usar el original con try/catch en chmodSync como fallback
-                    try {
-                        fs.chmodSync(enginePath, '755');
-                    } catch (chmodError) {
-                        console.error('Error al intentar chmod en ruta original:', chmodError);
+                    // Asignamos permisos de ejecución en la ruta escribible
+                    if (fs.existsSync(destPath)) {
+                        fs.chmodSync(destPath, '755');
+                        binarioListo = true;
                     }
+                } catch (err) {
+                    console.error('Error al preparar el motor ejecutable en Linux/Unix:', err);
                 }
-            }
 
-            // Agregamos colores como quinto argumento (siempre entero)
-            comando = `"${enginePath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
-        } else {
-            const scriptPath = path.join(__dirname, '../python/engine.py');
-            // Agregamos colores como quinto argumento
-            comando = `python "${scriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
-        }
+                // Definimos la ruta de ejecución primaria
+                const binarioPath = binarioListo ? destPath : enginePath;
+                const comandoBinario = `"${binarioPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
 
-        exec(comando, (error, stdout, stderr) => {
-            if (error) {
-                console.error("Error en motor/script de Python:", error);
-                return;
-            }
-            if (stderr) {
-                console.error("Stderr de Python:", stderr);
-            }
-            try {
-                const respuesta = JSON.parse(stdout);
-                if (respuesta.status === "ok") {
-                    // Enviamos tanto la ruta procesada como la lista de colores
-                    event.reply('proceso-terminado', {
-                        path: respuesta.path,
-                        colors: respuesta.colors || []
+                console.log("Intentando ejecutar binario compilado en Linux:", comandoBinario);
+
+                runCommand(comandoBinario)
+                    .then(res => {
+                        event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] });
+                    })
+                    .catch(binErr => {
+                        console.warn("Fallo la ejecución del binario compilado en Linux. Intentando fallback con python3 local...", binErr);
+                        
+                        // Fallback: Ejecutar el script original .py usando python3 de la distribución local
+                        const pythonScriptPath = path.join(process.resourcesPath, 'engine.py');
+                        
+                        if (fs.existsSync(pythonScriptPath)) {
+                            // Intentamos primero con python3
+                            const comandoPython3 = `python3 "${pythonScriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
+                            console.log("Ejecutando comando fallback (python3):", comandoPython3);
+                            
+                            runCommand(comandoPython3)
+                                .then(res => {
+                                    event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] });
+                                })
+                                .catch(py3Err => {
+                                    console.warn("Fallo fallback con python3. Intentando con comando python...", py3Err);
+                                    // Intentamos con python (por si python3 no está en PATH pero python sí)
+                                    const comandoPython = `python "${pythonScriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
+                                    console.log("Ejecutando comando fallback (python):", comandoPython);
+                                    
+                                    runCommand(comandoPython)
+                                        .then(res => {
+                                            event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] });
+                                        })
+                                        .catch(finalErr => {
+                                            console.error("Todos los métodos de ejecución fallaron en Linux:", finalErr);
+                                        });
+                                });
+                        } else {
+                            console.error("El binario falló y no se encontró el script de Python en recursos para el fallback.");
+                        }
                     });
-                }
-            } catch (e) {
-                console.error("Error interpretando respuesta de Python:", e, "Stdout recibido:", stdout);
             }
-        });
+        } else {
+            // Modo desarrollo
+            const scriptPath = path.join(__dirname, '../python/engine.py');
+            const pythonCmd = esWindows ? 'python' : 'python3';
+            const comando = `${pythonCmd} "${scriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
+            
+            console.log("Ejecutando en desarrollo:", comando);
+            
+            runCommand(comando)
+                .then(res => event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] }))
+                .catch(err => {
+                    if (!esWindows && pythonCmd === 'python3') {
+                        // Fallback a comando 'python' en Unix de desarrollo
+                        const comandoFallback = `python "${scriptPath}" "${ruta}" ${ancho} ${alto} ${mantenerOriginal} ${colores}`;
+                        runCommand(comandoFallback)
+                            .then(res => event.reply('proceso-terminado', { path: res.path, colors: res.colors || [] }))
+                            .catch(fallbackErr => console.error("Error en desarrollo con fallback a python:", fallbackErr));
+                    } else {
+                        console.error("Error en desarrollo:", err);
+                    }
+                });
+        }
     });
 
     // Guardar archivo procesado a ubicación final

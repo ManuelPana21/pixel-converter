@@ -29,6 +29,14 @@
         {
           "from": "src/python/engine",
           "to": "engine"
+        },
+        {
+          "from": "src/python/engine.py",
+          "to": "engine.py"
+        },
+        {
+          "from": "src/python/processor.py",
+          "to": "processor.py"
         }
       ]
     }
