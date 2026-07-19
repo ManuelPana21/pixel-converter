@@ -2,7 +2,8 @@
   "name": "pixel-converter",
   "version": "1.0.0",
   "description": "Conversor de pixeles",
-  "main": "src/main.js",
+  "main": "main.js",
+  "author": "Manuel",
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win",
@@ -12,25 +13,26 @@
     "appId": "com.pixelconverter.app",
     "win": {
       "target": "nsis",
-      "icon": "pig-icon.png"
+      "icon": "pig-icon.png",
+      "extraResources": [
+        {
+          "from": "src/python/engine.exe",
+          "to": "engine.exe"
+        }
+      ]
     },
     "linux": {
       "target": "AppImage",
       "icon": "pig-icon.png",
-      "category": "Utility"
-    },
-    "extraResources": [
-      {
-        "from": "src/python/engine.exe",
-        "to": "engine.exe"
-      },
-      {
-        "from": "src/python/engine",
-        "to": "engine"
-      }
-    ]
+      "category": "Utility",
+      "extraResources": [
+        {
+          "from": "src/python/engine",
+          "to": "engine"
+        }
+      ]
+    }
   },
-  "author": "Manuel",
   "dependencies": {},
   "devDependencies": {
     "electron": "^31.7.7",
