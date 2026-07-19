@@ -70,8 +70,29 @@
                 </label>
             </div>
         </div>
+
+        <!-- Nueva sección para cantidad de colores y visualización de paleta -->
+        <div class="seccion-colores" style="margin-top: 25px; border-top: 1px solid var(--lineas-borde); padding-top: 20px;">
+            <div class="slider-colores-container" style="margin-bottom: 20px;">
+                <label for="input-colores" style="font-weight: 600; display: block; margin-bottom: 10px;">
+                    Cantidad máxima de colores: <span id="label-colores" style="color: var(--color-acento);">16</span>
+                </label>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <span>2</span>
+                    <input type="range" id="input-colores" min="2" max="256" value="16" style="width: 60%; accent-color: var(--color-acento);">
+                    <span>256</span>
+                </div>
+            </div>
+
+            <div class="paleta-container" style="text-align: left;">
+                <p style="font-weight: 600; margin-bottom: 10px; text-align: center;">Colores utilizados:</p>
+                <div id="lista-colores" class="grid-colores">
+                    <p style="grid-column: 1 / -1; text-align: center; color: var(--lineas-borde); margin: 20px 0;">Carga una imagen para ver su paleta de colores</p>
+                </div>
+            </div>
+        </div>
         
-        <div class="botones-accion" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+        <div class="botones-accion" style="display: flex; gap: 10px; justify-content: center; margin-top: 25px; border-top: 1px solid var(--lineas-borde); padding-top: 20px;">
             <button id="btn-volver">Cargar nueva imagen</button>
             <button id="btn-guardar" class="btn-activo">Guardar Imagen</button>
         </div>        
